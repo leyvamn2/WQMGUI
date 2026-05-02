@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WaterGuard Pro - Control Maestro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0b0e14;
+            color: #e6edf3;
+            overflow-x: hidden;
+        }
+        .glass-panel {
+            background: rgba(22, 27, 34, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1.5rem;
+        }
+        .status-pill {
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .param-row {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            padding: 12px 0;
+        }
+        .param-row:last-child { border-bottom: none; }
+        
+        .gradient-safe { background: linear-gradient(135deg, #064e3b 0%, #059669 100%); }
+        .gradient-danger { background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%); }
+
+        .chart-container {
+            position: relative;
+            height: 100%;
+            min-height: 350px;
+            width: 100%;
+        }
+
+        /* Modal Styles */
+        #sensor-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        #sensor-modal.active { display: flex; }
+
+        /* Notificaciones Pop-up */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            animation: slideIn 0.3s ease-out forwards;
+            min-width: 280px;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Dropdown Panels */
+        .dropdown-panel {
+            display: none;
+            position: absolute;
+            top: 55px;
+            z-index: 50;
+        }
+        .dropdown-panel.active { display: block; }
+    </style>
+</head>
+<body class="p-4 md:p-6 space-y-6">
+
+    <!-- CONTENEDOR DE ALERTAS POP-UP -->
+    <div id="toast-container"></div>
+
+    <!-- MODAL DE DETALLE DE HARDWARE Y SENSORES -->
+    <div id="sensor-modal">
+        <div class="glass-panel w-full max-w-lg p-8 shadow-2xl border border-white/10 relative">
+            <button onclick="toggleModal()" class="absolute top-6 right-6 w-8 h-8 rounded-full bg-white/5 hover:bg-white/20 flex items-center justify-center text-gray-300 transition-all">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <div class="flex items-center gap-4 mb-6">
+                <div class="w-12 h-12 bg-blue-500/20 rounded-2xl flex items-center justify-center text-blue-400">
+                    <i class="fas fa-satellite-dish text-xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold">Información de Hardware</h2>
+                    <p class="text-xs text-gray-400">Diagnóstico a detalle de los componentes</p>
+                </div>
+            </div>
+
+            <!-- Información del Nodo -->
+            <div class="space-y-3 mb-6">
+                <div class="p-4 bg-white/5 rounded-xl border border-white/5">
+                    <p class="text-[10px] text-gray-500 uppercase font-bold mb-2">Conexión del Nodo</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-bold flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span> Conectado
+                        </span>
+                        <div class="text-right">
+                            <span class="text-[9px] text-gray-500 uppercase block">Última Conexión</span>
+                            <span id="modal-last-comm" class="text-xs text-gray-300 font-mono">--:--:--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-white/5 rounded-xl border border-white/5">
+                    <p class="text-[10px] text-gray-500 uppercase font-bold mb-2">Sincronización de Datos</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-bold flex items-center gap-2 text-purple-400">
+                            <i class="fas fa-cloud-arrow-up"></i> Exitosa
+                        </span>
+                        <div class="text-right">
+                            <span class="text-[9px] text-gray-500 uppercase block">Última Sincronización</span>
+                            <span id="modal-last-sync" class="text-xs text-gray-300 font-mono">--:--:--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Sensores -->
+            <div>
+                <p class="text-[10px] text-gray-500 uppercase font-bold mb-3 px-1">Estado Individual de Sensores (6/6)</p>
+                <div class="grid grid-cols-1 gap-2" id="modal-sensor-list">
+                    <!-- Dinámico por JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANTALLA PRINCIPAL -->
+    <div class="max-w-[1600px] mx-auto space-y-6 flex flex-col h-full">
+        
+        <!-- HEADER -->
+        <header class="flex justify-between items-center px-2">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+                    <i class="fas fa-droplet text-white"></i>
+                </div>
+                <h1 class="text-xl font-extrabold tracking-tight">WaterGuard <span class="text-blue-500 font-light">PRO</span></h1>
+            </div>
+
+            <div class="flex items-center gap-4 relative">
+                <!-- Estado Sistema General -->
+                <div id="sync-status" class="hidden md:flex items-center gap-2 text-[10px] text-blue-400 font-bold bg-blue-500/10 px-4 py-2 rounded-full border border-blue-500/20">
+                    <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                    SISTEMA ACTIVO
+                </div>
+                
+                <!-- Ícono de Hardware (NUEVO) -->
+                <button id="hw-btn" class="relative w-11 h-11 glass-panel flex items-center justify-center hover:bg-white/5 transition-all">
+                    <i class="fas fa-microchip text-gray-300"></i>
+                </button>
+
+                <!-- Menú Dropdown de Hardware -->
+                <div id="hw-panel" class="dropdown-panel glass-panel p-4 shadow-2xl border border-white/10 right-16 w-80">
+                    <div class="flex justify-between items-center mb-3 pb-2 border-b border-white/5">
+                        <h4 class="text-[10px] font-bold text-gray-500 uppercase">Resumen de Hardware</h4>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <!-- Bateria -->
+                        <div class="bg-white/5 p-3 rounded-xl border border-white/5">
+                            <p class="text-[9px] text-gray-500 uppercase font-bold mb-1">Batería</p>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-battery-three-quarters text-green-400"></i>
+                                <span class="text-sm font-black">94%</span>
+                            </div>
+                        </div>
+                        <!-- Conexión -->
+                        <div class="bg-white/5 p-3 rounded-xl border border-white/5">
+                            <p class="text-[9px] text-gray-500 uppercase font-bold mb-1">Conexión</p>
+                            <div class="flex items-center gap-2">
+                                <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_#22c55e]"></span>
+                                <span class="text-[11px] font-bold text-gray-200">Estable</span>
+                            </div>
+                        </div>
+                        <!-- Sensores -->
+                        <div class="bg-white/5 p-3 rounded-xl border border-white/5">
+                            <p class="text-[9px] text-gray-500 uppercase font-bold mb-1">Sensores</p>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-satellite-dish text-blue-400"></i>
+                                <span class="text-sm font-black">6<span class="text-[10px] font-light text-gray-400">/6</span></span>
+                            </div>
+                        </div>
+                        <!-- Sincro -->
+                        <div class="bg-white/5 p-3 rounded-xl border border-white/5">
+                            <p class="text-[9px] text-gray-500 uppercase font-bold mb-1">Últ. Sincro</p>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-cloud-arrow-up text-purple-400"></i>
+                                <span id="drop-sync-time" class="text-[11px] font-bold font-mono">--:--</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="toggleModal(); closeAllPanels();" class="w-full py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-lg transition-all text-[10px] font-bold uppercase tracking-wider border border-blue-500/20">
+                        <i class="fas fa-search-plus mr-1"></i> Detalles de Sensores
+                    </button>
+                </div>
+
+                <!-- Campana de Notificaciones -->
+                <button id="notif-bell" class="relative w-11 h-11 glass-panel flex items-center justify-center hover:bg-white/5 transition-all">
+                    <i class="fas fa-bell text-gray-300"></i>
+                    <span id="notif-dot" class="absolute top-3 right-3 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#0b0e14] hidden"></span>
+                </button>
+
+                <!-- Menú Dropdown de Notificaciones -->
+                <div id="notif-panel" class="dropdown-panel glass-panel p-4 shadow-2xl border border-white/10 right-0 w-80">
+                    <div class="flex justify-between items-center mb-3 pb-2 border-b border-white/5">
+                        <h4 class="text-[10px] font-bold text-gray-500 uppercase">Alertas Recientes</h4>
+                        <button onclick="clearNotifs()" class="text-[9px] text-blue-400 hover:underline">Limpiar</button>
+                    </div>
+                    <div id="notif-list" class="space-y-2 max-h-64 overflow-y-auto pr-2">
+                        <p class="text-[10px] text-gray-500 text-center py-4 italic">Sin notificaciones nuevas.</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- INDICADOR PRINCIPAL (BANNER REDUCIDO) -->
+        <div id="hero-card" class="w-full p-6 md:p-10 rounded-[2rem] gradient-safe shadow-2xl transition-all duration-700 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+            <div class="relative z-10 text-center md:text-left">
+                <span class="text-[11px] font-bold bg-black/20 px-4 py-1 rounded-full uppercase tracking-[0.2em]">Calidad del Agua</span>
+                <h2 id="hero-title" class="text-4xl md:text-5xl font-black mt-3 mb-2 tracking-tighter">Agua Segura</h2>
+                <p id="hero-desc" class="text-base md:text-lg opacity-90 max-w-2xl font-light leading-snug">
+                    Lecturas normales. El agua almacenada en el tinaco es apta para uso doméstico.
+                </p>
+            </div>
+            <div class="relative z-10">
+                <i id="hero-icon" class="fas fa-circle-check text-[6rem] md:text-[8rem] opacity-30"></i>
+            </div>
+            <div class="absolute -right-10 -bottom-10 w-[20rem] h-[20rem] bg-white/5 rounded-full blur-[60px]"></div>
+        </div>
+
+        <!-- INFO DE UBICACIÓN Y TIEMPO -->
+        <div class="flex flex-col md:flex-row justify-between items-center px-4 py-2 glass-panel border-none bg-transparent gap-4">
+            <div class="flex items-center gap-6">
+                <!-- Ubicación enfocada a usuario final -->
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-house-user text-blue-500 text-lg"></i>
+                    <div>
+                        <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider leading-none">Ubicación</p>
+                        <p class="text-sm font-semibold">Casa - Tinaco de Azotea</p>
+                    </div>
+                </div>
+                <div class="h-8 w-px bg-white/10 hidden md:block"></div>
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-clock text-blue-500"></i>
+                    <div>
+                        <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider leading-none">Última Medición</p>
+                        <p id="time-text" class="text-sm font-semibold">Cargando...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="text-[10px] font-mono text-gray-500 bg-white/5 px-3 py-1 rounded-md">
+                MODO: USUARIO FINAL
+            </div>
+        </div>
+
+        <!-- DASHBOARD GRID -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow">
+            
+            <!-- IZQUIERDA: SENSORES DE AGUA (6 PARÁMETROS) -->
+            <div class="lg:col-span-4 glass-panel p-6 h-full flex flex-col justify-between">
+                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <i class="fas fa-chart-line text-blue-400"></i> Lectura de Parámetros
+                </h3>
+                
+                <div class="space-y-0 flex-grow">
+                    <!-- pH -->
+                    <div class="param-row flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
+                            <i class="fas fa-vial"></i>
+                        </div>
+                        <div class="flex-grow">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-bold">Acidez (pH)</span>
+                                <span id="st-ph" class="status-pill bg-green-500/10 text-green-500">Correcto</span>
+                            </div>
+                            <p id="desc-ph" class="text-[10px] text-gray-500">Nivel neutro y balanceado.</p>
+                        </div>
+                        <div class="text-right">
+                            <span id="val-ph" class="text-lg font-bold">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Turbidez -->
+                    <div class="param-row flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-400">
+                            <i class="fas fa-eye"></i>
+                        </div>
+                        <div class="flex-grow">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-bold">Turbidez</span>
+                                <span id="st-turb" class="status-pill bg-green-500/10 text-green-500">Limpia</span>
+                            </div>
+                            <p id="desc-turb" class="text-[10px] text-gray-500">Agua transparente.</p>
+                        </div>
+                        <div class="text-right">
+                            <span id="val-turb" class="text-lg font-bold">--</span>
+                        </div>
+                    </div>
+
+                    <!-- TDS -->
+                    <div class="param-row flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">
+                            <i class="fas fa-filter"></i>
+                        </div>
+                        <div class="flex-grow">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-bold">Sólidos (TDS)</span>
+                                <span id="st-tds" class="status-pill bg-green-500/10 text-green-500">Normal</span>
+                            </div>
+                            <p id="desc-tds" class="text-[10px] text-gray-500">Concentración de sales baja.</p>
+                        </div>
+                        <div class="text-right">
+                            <span id="val-tds" class="text-lg font-bold">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Temperatura -->
+                    <div class="param-row flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-400">
+                            <i class="fas fa-temperature-half"></i>
+                        </div>
+                        <div class="flex-grow">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-bold">Temperatura</span>
+                                <span id="st-temp" class="status-pill bg-green-500/10 text-green-500">Estable</span>
+                            </div>
+                            <p id="desc-temp" class="text-[10px] text-gray-500">Dentro del rango óptimo.</p>
+                        </div>
+                        <div class="text-right">
+                            <span id="val-temp" class="text-lg font-bold">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Oxígeno Disuelto -->
+                    <div class="param-row flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400">
+                            <i class="fas fa-wind"></i>
+                        </div>
+                        <div class="flex-grow">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-bold">Oxígeno (OD)</span>
+                                <span id="st-od" class="status-pill bg-green-500/10 text-green-500">Óptimo</span>
+                            </div>
+                            <p id="desc-od" class="text-[10px] text-gray-500">Buena aireación detectada.</p>
+                        </div>
+                        <div class="text-right">
+                            <span id="val-od" class="text-lg font-bold">--</span>
+                        </div>
+                    </div>
+
+                    <!-- ORP -->
+                    <div class="param-row flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center text-green-400">
+                            <i class="fas fa-shield-virus"></i>
+                        </div>
+                        <div class="flex-grow">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-bold">Purificación (ORP)</span>
+                                <span id="st-orp" class="status-pill bg-green-500/10 text-green-500">Segura</span>
+                            </div>
+                            <p id="desc-orp" class="text-[10px] text-gray-500">Nivel de desinfección OK.</p>
+                        </div>
+                        <div class="text-right">
+                            <span id="val-orp" class="text-lg font-bold">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DERECHA: GRÁFICAS E INFRAESTRUCTURA -->
+            <div class="lg:col-span-8 flex flex-col h-full">
+                <!-- GRÁFICO (AHORA OCUPA TODO EL ALTO DEL PANEL) -->
+                <div class="glass-panel p-6 flex-grow flex flex-col">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Historial de Calidad (ICA)</h3>
+                        <div class="flex gap-4">
+                            <div class="flex items-center gap-2 text-[10px] text-blue-400 font-bold">
+                                <span class="w-2 h-2 rounded-full bg-blue-500"></span> REAL
+                            </div>
+                            <div class="flex items-center gap-2 text-[10px] text-purple-400 font-bold">
+                                <span class="w-2 h-2 border-2 border-dashed border-purple-500 rounded-full"></span> IA PRONÓSTICO
+                            </div>
+                        </div>
+                    </div>
+                    <!-- El contenedor de la gráfica se estira -->
+                    <div class="chart-container flex-grow">
+                        <canvas id="qualityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CSV_FILE = 'dataset_agua_NOM_25000_6Sensores.csv';
+        let chart;
+        let dataPool = [];
+        let currentIndex = 0;
+
+        // Limites NOM-127
+        const LIMITS = {
+            ph: { min: 6.5, max: 8.5 },
+            turb: { max: 4.0 },
+            tds: { max: 1000 },
+            temp: { max: 35 },
+            od: { min: 4.0 },
+            orp: { min: 400 } // Std de desinfección
+        };
+
+        const ctx = document.getElementById('qualityChart').getContext('2d');
+
+        async function initApp() {
+            initChart();
+            setupInteractions();
+            
+            try {
+                // INTENTO DE LEER ARCHIVO REAL
+                const response = await fetch(CSV_FILE);
+                if (!response.ok) throw new Error("No se pudo cargar el archivo");
+                const text = await response.text();
+                parseCSV(text);
+            } catch (error) {
+                console.warn("⚠️ No se encontró o hubo error de CORS con el CSV. Generando datos de respaldo.");
+                generateSimulatedData();
+            }
+
+            updateData();
+            setInterval(updateData, 10000); // 10 segundos para simular IoT
+        }
+
+        function parseCSV(text) {
+            const lines = text.trim().split('\n');
+            // Ignorar encabezado y tomar filas de datos
+            dataPool = lines.slice(1, 101).map(line => {
+                const v = line.split(',');
+                return {
+                    ph: parseFloat(v[0]),
+                    turb: parseFloat(v[1]),
+                    temp: parseFloat(v[2]),
+                    tds: parseFloat(v[3]),
+                    orp: parseFloat(v[4]),
+                    od: parseFloat(v[5]),
+                    tag: v[6] ? v[6].trim() : 'Desconocido'
+                };
+            }).filter(item => !isNaN(item.ph)); // Filtrar lineas vacias
+        }
+
+        function generateSimulatedData() {
+            const types = ["Agua Segura", "Agua Segura", "Agua Segura", "Agua Segura", "Anomalia Quimica", "Anomalia Biologica"];
+            for (let i = 0; i < 50; i++) {
+                const tag = types[Math.floor(Math.random() * types.length)];
+                const isAnomalous = tag !== "Agua Segura";
+                dataPool.push({
+                    ph: isAnomalous ? 4.5 + Math.random() * 6 : 7.2 + (Math.random() - 0.5) * 0.3,
+                    turb: isAnomalous ? 5.0 + Math.random() * 10 : 0.6 + (Math.random() * 0.4),
+                    tds: isAnomalous ? 1000 + Math.random() * 200 : 250 + (Math.random() * 40),
+                    temp: 22.2 + (Math.random() * 2),
+                    od: isAnomalous ? 2.5 + Math.random() : 8.2 + (Math.random() * 1.2),
+                    orp: isAnomalous ? 150 + Math.random() * 100 : 520 + (Math.random() * 50),
+                    tag: tag
+                });
+            }
+        }
+
+        function initChart() {
+            const labels = ['-4h', '-3h', '-2h', '-1h', 'Ahora', '+1h', '+2h', '+3h'];
+            const dataPast = [96, 98, 97, 98, 99, null, null, null];
+            const dataFuture = [null, null, null, null, 99, 98, 97, 98];
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Histórico',
+                            data: dataPast,
+                            borderColor: '#3b82f6',
+                            borderWidth: 4,
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#3b82f6'
+                        },
+                        {
+                            label: 'IA',
+                            data: dataFuture,
+                            borderColor: '#a855f7',
+                            borderDash: [5, 5],
+                            borderWidth: 2,
+                            backgroundColor: 'transparent',
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#a855f7'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 100,
+                            grid: { color: 'rgba(255,255,255,0.03)' },
+                            ticks: { font: { size: 10 }, color: '#555' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { size: 10 }, color: '#555' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function setupInteractions() {
+            const hwBtn = document.getElementById('hw-btn');
+            const notifBtn = document.getElementById('notif-bell');
+            const hwPanel = document.getElementById('hw-panel');
+            const notifPanel = document.getElementById('notif-panel');
+
+            hwBtn.onclick = (e) => {
+                e.stopPropagation();
+                notifPanel.classList.remove('active');
+                hwPanel.classList.toggle('active');
+            };
+
+            notifBtn.onclick = (e) => {
+                e.stopPropagation();
+                hwPanel.classList.remove('active');
+                notifPanel.classList.toggle('active');
+                document.getElementById('notif-dot').classList.add('hidden');
+            };
+
+            document.body.onclick = (e) => {
+                if(!e.target.closest('.dropdown-panel') && !e.target.closest('button')) {
+                    hwPanel.classList.remove('active');
+                    notifPanel.classList.remove('active');
+                }
+            };
+        }
+
+        function toggleModal() {
+            document.getElementById('sensor-modal').classList.toggle('active');
+        }
+
+        function showToast(msg) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast glass-panel p-4 border-l-4 border-red-500 shadow-2xl flex items-center gap-4`;
+            toast.innerHTML = `
+                <div class="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div>
+                    <h5 class="text-xs font-bold uppercase tracking-widest">Alerta de Calidad</h5>
+                    <p class="text-[11px] text-gray-400 mt-1">${msg}</p>
+                </div>
+            `;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 6000);
+
+            const list = document.getElementById('notif-list');
+            if (list.querySelector('p.italic')) list.innerHTML = '';
+            const item = document.createElement('div');
+            item.className = "p-3 bg-white/5 rounded-xl text-[10px] border-l-4 border-red-500 mb-2";
+            item.innerHTML = `<span class="text-gray-500 font-bold block mb-1">${new Date().toLocaleTimeString()}</span> ${msg}`;
+            list.prepend(item);
+            document.getElementById('notif-dot').classList.remove('hidden');
+        }
+
+        function clearNotifs() {
+            document.getElementById('notif-list').innerHTML = '<p class="text-[10px] text-gray-500 text-center py-4 italic">Sin notificaciones nuevas.</p>';
+            document.getElementById('notif-dot').classList.add('hidden');
+        }
+
+        function updateData() {
+            if(dataPool.length === 0) return;
+
+            const currentData = dataPool[currentIndex];
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('es-ES');
+            const fullDate = now.toLocaleDateString('es-ES');
+            
+            // Textos de tiempo
+            document.getElementById('time-text').innerText = `Hoy, ${timeStr}`;
+            document.getElementById('drop-sync-time').innerText = timeStr.substring(0, 5);
+            
+            // Modal de tiempo
+            document.getElementById('modal-last-comm').innerText = `${timeStr} - ${fullDate}`;
+            document.getElementById('modal-last-sync').innerText = `${timeStr} - ${fullDate}`;
+
+            // Reflejar datos del CSV
+            document.getElementById('val-ph').innerText = currentData.ph.toFixed(1);
+            document.getElementById('val-turb').innerText = currentData.turb.toFixed(1);
+            document.getElementById('val-tds').innerText = Math.round(currentData.tds);
+            document.getElementById('val-temp').innerText = currentData.temp.toFixed(1);
+            document.getElementById('val-od').innerText = currentData.od.toFixed(1);
+            document.getElementById('val-orp').innerText = Math.round(currentData.orp);
+
+            const hero = document.getElementById('hero-card');
+            const hTitle = document.getElementById('hero-title');
+            const hDesc = document.getElementById('hero-desc');
+            const hIcon = document.getElementById('hero-icon');
+
+            const isAnomalous = !currentData.tag.toLowerCase().includes("segura");
+
+            if (!isAnomalous) {
+                hero.className = "w-full p-6 md:p-10 rounded-[2rem] gradient-safe shadow-2xl transition-all duration-700 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden";
+                hTitle.innerText = "Agua Segura";
+                hDesc.innerText = "Lecturas normales. El agua almacenada en el tinaco es apta para uso doméstico.";
+                hIcon.className = "fas fa-circle-check text-[6rem] md:text-[8rem] opacity-30";
+            } else {
+                hero.className = "w-full p-6 md:p-10 rounded-[2rem] gradient-danger shadow-2xl transition-all duration-700 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden";
+                hTitle.innerText = "Alerta Detectada";
+                hDesc.innerText = `Motivo: ${currentData.tag}. Se han detectado parámetros fuera de norma en el tinaco.`;
+                hIcon.className = "fas fa-triangle-exclamation text-[6rem] md:text-[8rem] opacity-30";
+                showToast(`Alteración detectada: ${currentData.tag}`);
+            }
+
+            updateLabels(currentData);
+            updateModalSensors(currentData);
+            
+            // --- NUEVA LÓGICA DE GRÁFICA ---
+            let ica = isAnomalous ? 45 + Math.random() * 10 : 95 + Math.random() * 4;
+            
+            // 1. Recorrer el historial (Línea Azul) a la izquierda (-4h a Ahora)
+            for (let i = 0; i < 4; i++) {
+                chart.data.datasets[0].data[i] = chart.data.datasets[0].data[i + 1];
+            }
+            
+            // 2. Anclar el valor actual exactamente en "Ahora" (índice 4)
+            chart.data.datasets[0].data[4] = ica;
+            
+            // 3. Forzar a que el futuro del histórico esté vacío (nulo)
+            chart.data.datasets[0].data[5] = null;
+            chart.data.datasets[0].data[6] = null;
+            chart.data.datasets[0].data[7] = null;
+
+            // 4. Anclar la línea de la IA (Morada) al mismo punto de inicio "Ahora"
+            chart.data.datasets[1].data[4] = ica;
+            
+            // 5. Generar pronóstico para la IA (índices 5, 6 y 7)
+            if (isAnomalous) {
+                // Si hay anomalía, pronostica que seguirá bajando o inestable
+                chart.data.datasets[1].data[5] = ica - Math.random() * 5;
+                chart.data.datasets[1].data[6] = ica - Math.random() * 10;
+                chart.data.datasets[1].data[7] = ica - Math.random() * 15;
+            } else {
+                // Si es seguro, pronostica que se mantendrá estable arriba de 95
+                chart.data.datasets[1].data[5] = 96 + Math.random() * 3;
+                chart.data.datasets[1].data[6] = 95 + Math.random() * 4;
+                chart.data.datasets[1].data[7] = 97 + Math.random() * 2;
+            }
+
+            chart.update('none');
+
+            // Ciclo de datos
+            currentIndex = (currentIndex + 1) % dataPool.length;
+        }
+
+        function updateLabels(data) {
+            const rules = {
+                ph: { isOk: data.ph >= LIMITS.ph.min && data.ph <= LIMITS.ph.max, ok: 'Correcto', okDesc: 'Nivel neutro y balanceado.', err: 'Alerta', errDesc: 'pH fuera de norma.' },
+                turb: { isOk: data.turb <= LIMITS.turb.max, ok: 'Limpia', okDesc: 'Agua transparente.', err: 'Alerta', errDesc: 'Exceso de sedimentos.' },
+                tds: { isOk: data.tds <= LIMITS.tds.max, ok: 'Normal', okDesc: 'Concentración de sales baja.', err: 'Alerta', errDesc: 'Altos sólidos disueltos.' },
+                temp: { isOk: data.temp <= LIMITS.temp.max, ok: 'Estable', okDesc: 'Dentro del rango óptimo.', err: 'Alerta', errDesc: 'Temperatura inusual.' },
+                od: { isOk: data.od >= LIMITS.od.min, ok: 'Óptimo', okDesc: 'Buena aireación detectada.', err: 'Alerta', errDesc: 'Bajo oxígeno detectado.' },
+                orp: { isOk: data.orp >= LIMITS.orp.min, ok: 'Segura', okDesc: 'Nivel de desinfección OK.', err: 'Alerta', errDesc: 'Riesgo biológico.' }
+            };
+
+            Object.keys(rules).forEach(id => {
+                const rule = rules[id];
+                const badge = document.getElementById(`st-${id}`);
+                const text = document.getElementById(`desc-${id}`);
+                
+                if (rule.isOk) {
+                    badge.innerText = rule.ok;
+                    badge.className = "status-pill bg-green-500/10 text-green-500";
+                    text.innerText = rule.okDesc;
+                    text.classList.remove('text-red-400');
+                    text.classList.add('text-gray-500');
+                } else {
+                    badge.innerText = rule.err;
+                    badge.className = "status-pill bg-red-500/10 text-red-500";
+                    text.innerText = rule.errDesc;
+                    text.classList.remove('text-gray-500');
+                    text.classList.add('text-red-400');
+                }
+            });
+        }
+
+        function updateModalSensors(data) {
+            const list = document.getElementById('modal-sensor-list');
+            list.innerHTML = '';
+            
+            const checks = [
+                { id: 'pH', icon: 'fa-vial text-blue-400', isOk: data.ph >= LIMITS.ph.min && data.ph <= LIMITS.ph.max },
+                { id: 'Turbidez', icon: 'fa-eye text-cyan-400', isOk: data.turb <= LIMITS.turb.max },
+                { id: 'Sólidos (TDS)', icon: 'fa-filter text-purple-400', isOk: data.tds <= LIMITS.tds.max },
+                { id: 'Temperatura', icon: 'fa-temperature-half text-orange-400', isOk: data.temp <= LIMITS.temp.max },
+                { id: 'Oxígeno (OD)', icon: 'fa-wind text-indigo-400', isOk: data.od >= LIMITS.od.min },
+                { id: 'Purificación (ORP)', icon: 'fa-shield-virus text-green-400', isOk: data.orp >= LIMITS.orp.min }
+            ];
+
+            checks.forEach(check => {
+                const item = document.createElement('div');
+                item.className = `flex justify-between items-center p-3 bg-black/20 rounded-lg border ${check.isOk ? 'border-white/5' : 'border-yellow-500/30'}`;
+                item.innerHTML = `
+                    <span class="text-xs font-semibold flex items-center gap-2"><i class="fas ${check.icon} w-4"></i> Sensor ${check.id}</span>
+                    ${check.isOk 
+                        ? '<span class="text-[9px] font-bold text-green-500 bg-green-500/10 px-2 py-0.5 rounded">OK</span>' 
+                        : '<span class="text-[9px] font-bold text-yellow-500 bg-yellow-500/10 px-2 py-0.5 rounded uppercase">Necesita Recalibrarse</span>'
+                    }
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
