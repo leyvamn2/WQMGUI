@@ -36,11 +36,12 @@
         
         .gradient-safe { background: linear-gradient(135deg, #064e3b 0%, #059669 100%); }
         .gradient-danger { background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%); }
+        .gradient-hw { background: linear-gradient(135deg, #1f2937 0%, #374151 100%); }
 
         .chart-container {
             position: relative;
             height: 100%;
-            min-height: 350px;
+            min-height: 250px;
             width: 100%;
         }
 
@@ -89,10 +90,8 @@
 </head>
 <body class="p-4 md:p-6 space-y-6">
 
-    <!-- CONTENEDOR DE ALERTAS POP-UP -->
     <div id="toast-container"></div>
 
-    <!-- MODAL DE DETALLE DE HARDWARE Y SENSORES -->
     <div id="sensor-modal">
         <div class="glass-panel w-full max-w-lg p-8 shadow-2xl border border-white/10 relative">
             <button onclick="toggleModal()" class="absolute top-6 right-6 w-8 h-8 rounded-full bg-white/5 hover:bg-white/20 flex items-center justify-center text-gray-300 transition-all">
@@ -109,7 +108,6 @@
                 </div>
             </div>
 
-            <!-- Información del Nodo -->
             <div class="space-y-3 mb-6">
                 <div class="p-4 bg-white/5 rounded-xl border border-white/5">
                     <p class="text-[10px] text-gray-500 uppercase font-bold mb-2">Conexión del Nodo</p>
@@ -138,20 +136,16 @@
                 </div>
             </div>
 
-            <!-- Lista de Sensores -->
             <div>
                 <p class="text-[10px] text-gray-500 uppercase font-bold mb-3 px-1">Estado Individual de Sensores (6/6)</p>
                 <div class="grid grid-cols-1 gap-2" id="modal-sensor-list">
-                    <!-- Dinámico por JS -->
-                </div>
+                    </div>
             </div>
         </div>
     </div>
 
-    <!-- PANTALLA PRINCIPAL -->
     <div class="max-w-[1600px] mx-auto space-y-6 flex flex-col h-full">
         
-        <!-- HEADER -->
         <header class="flex justify-between items-center px-2">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
@@ -161,24 +155,20 @@
             </div>
 
             <div class="flex items-center gap-4 relative">
-                <!-- Estado Sistema General -->
                 <div id="sync-status" class="hidden md:flex items-center gap-2 text-[10px] text-blue-400 font-bold bg-blue-500/10 px-4 py-2 rounded-full border border-blue-500/20">
                     <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
                     SISTEMA ACTIVO
                 </div>
                 
-                <!-- Ícono de Hardware (NUEVO) -->
                 <button id="hw-btn" class="relative w-11 h-11 glass-panel flex items-center justify-center hover:bg-white/5 transition-all">
                     <i class="fas fa-microchip text-gray-300"></i>
                 </button>
 
-                <!-- Menú Dropdown de Hardware -->
                 <div id="hw-panel" class="dropdown-panel glass-panel p-4 shadow-2xl border border-white/10 right-16 w-80">
                     <div class="flex justify-between items-center mb-3 pb-2 border-b border-white/5">
                         <h4 class="text-[10px] font-bold text-gray-500 uppercase">Resumen de Hardware</h4>
                     </div>
                     <div class="grid grid-cols-2 gap-3 mb-4">
-                        <!-- Bateria -->
                         <div class="bg-white/5 p-3 rounded-xl border border-white/5">
                             <p class="text-[9px] text-gray-500 uppercase font-bold mb-1">Batería</p>
                             <div class="flex items-center gap-2">
@@ -186,7 +176,6 @@
                                 <span class="text-sm font-black">94%</span>
                             </div>
                         </div>
-                        <!-- Conexión -->
                         <div class="bg-white/5 p-3 rounded-xl border border-white/5">
                             <p class="text-[9px] text-gray-500 uppercase font-bold mb-1">Conexión</p>
                             <div class="flex items-center gap-2">
@@ -194,15 +183,13 @@
                                 <span class="text-[11px] font-bold text-gray-200">Estable</span>
                             </div>
                         </div>
-                        <!-- Sensores -->
                         <div class="bg-white/5 p-3 rounded-xl border border-white/5">
                             <p class="text-[9px] text-gray-500 uppercase font-bold mb-1">Sensores</p>
                             <div class="flex items-center gap-2">
                                 <i class="fas fa-satellite-dish text-blue-400"></i>
-                                <span class="text-sm font-black">6<span class="text-[10px] font-light text-gray-400">/6</span></span>
+                                <span class="text-sm font-black"><span id="drop-sensor-count">6</span><span class="text-[10px] font-light text-gray-400">/6</span></span>
                             </div>
                         </div>
-                        <!-- Sincro -->
                         <div class="bg-white/5 p-3 rounded-xl border border-white/5">
                             <p class="text-[9px] text-gray-500 uppercase font-bold mb-1">Últ. Sincro</p>
                             <div class="flex items-center gap-2">
@@ -216,13 +203,11 @@
                     </button>
                 </div>
 
-                <!-- Campana de Notificaciones -->
                 <button id="notif-bell" class="relative w-11 h-11 glass-panel flex items-center justify-center hover:bg-white/5 transition-all">
                     <i class="fas fa-bell text-gray-300"></i>
                     <span id="notif-dot" class="absolute top-3 right-3 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#0b0e14] hidden"></span>
                 </button>
 
-                <!-- Menú Dropdown de Notificaciones -->
                 <div id="notif-panel" class="dropdown-panel glass-panel p-4 shadow-2xl border border-white/10 right-0 w-80">
                     <div class="flex justify-between items-center mb-3 pb-2 border-b border-white/5">
                         <h4 class="text-[10px] font-bold text-gray-500 uppercase">Alertas Recientes</h4>
@@ -235,10 +220,9 @@
             </div>
         </header>
 
-        <!-- INDICADOR PRINCIPAL (BANNER REDUCIDO) -->
         <div id="hero-card" class="w-full p-6 md:p-10 rounded-[2rem] gradient-safe shadow-2xl transition-all duration-700 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
             <div class="relative z-10 text-center md:text-left">
-                <span class="text-[11px] font-bold bg-black/20 px-4 py-1 rounded-full uppercase tracking-[0.2em]">Calidad del Agua</span>
+                <span class="text-[11px] font-bold bg-black/20 px-4 py-1 rounded-full uppercase tracking-[0.2em]">Diagnóstico Actual</span>
                 <h2 id="hero-title" class="text-4xl md:text-5xl font-black mt-3 mb-2 tracking-tighter">Agua Segura</h2>
                 <p id="hero-desc" class="text-base md:text-lg opacity-90 max-w-2xl font-light leading-snug">
                     Lecturas normales. El agua almacenada en el tinaco es apta para uso doméstico.
@@ -250,10 +234,8 @@
             <div class="absolute -right-10 -bottom-10 w-[20rem] h-[20rem] bg-white/5 rounded-full blur-[60px]"></div>
         </div>
 
-        <!-- INFO DE UBICACIÓN Y TIEMPO -->
         <div class="flex flex-col md:flex-row justify-between items-center px-4 py-2 glass-panel border-none bg-transparent gap-4">
             <div class="flex items-center gap-6">
-                <!-- Ubicación enfocada a usuario final -->
                 <div class="flex items-center gap-2">
                     <i class="fas fa-house-user text-blue-500 text-lg"></i>
                     <div>
@@ -275,17 +257,14 @@
             </div>
         </div>
 
-        <!-- DASHBOARD GRID -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow">
             
-            <!-- IZQUIERDA: SENSORES DE AGUA (6 PARÁMETROS) -->
             <div class="lg:col-span-4 glass-panel p-6 h-full flex flex-col justify-between">
                 <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
                     <i class="fas fa-chart-line text-blue-400"></i> Lectura de Parámetros
                 </h3>
                 
                 <div class="space-y-0 flex-grow">
-                    <!-- pH -->
                     <div class="param-row flex items-center gap-4">
                         <div class="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
                             <i class="fas fa-vial"></i>
@@ -302,7 +281,6 @@
                         </div>
                     </div>
 
-                    <!-- Turbidez -->
                     <div class="param-row flex items-center gap-4">
                         <div class="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-400">
                             <i class="fas fa-eye"></i>
@@ -319,7 +297,6 @@
                         </div>
                     </div>
 
-                    <!-- TDS -->
                     <div class="param-row flex items-center gap-4">
                         <div class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">
                             <i class="fas fa-filter"></i>
@@ -336,7 +313,6 @@
                         </div>
                     </div>
 
-                    <!-- Temperatura -->
                     <div class="param-row flex items-center gap-4">
                         <div class="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-400">
                             <i class="fas fa-temperature-half"></i>
@@ -353,7 +329,6 @@
                         </div>
                     </div>
 
-                    <!-- Oxígeno Disuelto -->
                     <div class="param-row flex items-center gap-4">
                         <div class="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400">
                             <i class="fas fa-wind"></i>
@@ -370,7 +345,6 @@
                         </div>
                     </div>
 
-                    <!-- ORP -->
                     <div class="param-row flex items-center gap-4">
                         <div class="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center text-green-400">
                             <i class="fas fa-shield-virus"></i>
@@ -389,9 +363,7 @@
                 </div>
             </div>
 
-            <!-- DERECHA: GRÁFICAS E INFRAESTRUCTURA -->
             <div class="lg:col-span-8 flex flex-col h-full">
-                <!-- GRÁFICO (AHORA OCUPA TODO EL ALTO DEL PANEL) -->
                 <div class="glass-panel p-6 flex-grow flex flex-col">
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Historial de Calidad (ICA)</h3>
@@ -404,7 +376,6 @@
                             </div>
                         </div>
                     </div>
-                    <!-- El contenedor de la gráfica se estira -->
                     <div class="chart-container flex-grow">
                         <canvas id="qualityChart"></canvas>
                     </div>
@@ -418,6 +389,9 @@
         let chart;
         let dataPool = [];
         let currentIndex = 0;
+        
+        // Memoria de fallas de Hardware (Regla > 5 eventos)
+        let hwErrorCounts = { ph: 0, turb: 0, tds: 0, temp: 0, od: 0, orp: 0 };
 
         // Limites NOM-127
         const LIMITS = {
@@ -426,7 +400,7 @@
             tds: { max: 1000 },
             temp: { max: 35 },
             od: { min: 4.0 },
-            orp: { min: 400 } // Std de desinfección
+            orp: { min: 400 } 
         };
 
         const ctx = document.getElementById('qualityChart').getContext('2d');
@@ -436,23 +410,21 @@
             setupInteractions();
             
             try {
-                // INTENTO DE LEER ARCHIVO REAL
                 const response = await fetch(CSV_FILE);
-                if (!response.ok) throw new Error("No se pudo cargar el archivo");
+                if (!response.ok) throw new Error("CORS o no encontrado");
                 const text = await response.text();
                 parseCSV(text);
             } catch (error) {
-                console.warn("⚠️ No se encontró o hubo error de CORS con el CSV. Generando datos de respaldo.");
+                console.warn("Utilizando datos simulados (CORS/Bloqueo detectado)");
                 generateSimulatedData();
             }
 
             updateData();
-            setInterval(updateData, 10000); // 10 segundos para simular IoT
+            setInterval(updateData, 8000); 
         }
 
         function parseCSV(text) {
             const lines = text.trim().split('\n');
-            // Ignorar encabezado y tomar filas de datos
             dataPool = lines.slice(1, 101).map(line => {
                 const v = line.split(',');
                 return {
@@ -464,21 +436,24 @@
                     od: parseFloat(v[5]),
                     tag: v[6] ? v[6].trim() : 'Desconocido'
                 };
-            }).filter(item => !isNaN(item.ph)); // Filtrar lineas vacias
+            }).filter(item => !isNaN(item.ph));
         }
 
         function generateSimulatedData() {
-            const types = ["Agua Segura", "Agua Segura", "Agua Segura", "Agua Segura", "Anomalia Quimica", "Anomalia Biologica"];
+            const types = ["Agua Segura", "Agua Segura", "Agua Segura", "Anomalia Quimica", "Anomalia Biologica", "Anomalia de Hardware"];
             for (let i = 0; i < 50; i++) {
                 const tag = types[Math.floor(Math.random() * types.length)];
-                const isAnomalous = tag !== "Agua Segura";
+                // Forzamos datos malos si es anomalia para que brinquen los limites
+                const isWaterErr = tag.includes("Quimica") || tag.includes("Biologica");
+                const isHwErr = tag.includes("Hardware");
+
                 dataPool.push({
-                    ph: isAnomalous ? 4.5 + Math.random() * 6 : 7.2 + (Math.random() - 0.5) * 0.3,
-                    turb: isAnomalous ? 5.0 + Math.random() * 10 : 0.6 + (Math.random() * 0.4),
-                    tds: isAnomalous ? 1000 + Math.random() * 200 : 250 + (Math.random() * 40),
+                    ph: isWaterErr ? 4.5 + Math.random() * 6 : 7.2 + (Math.random() - 0.5) * 0.3,
+                    turb: isWaterErr ? 5.0 + Math.random() * 10 : 0.6 + (Math.random() * 0.4),
+                    tds: isHwErr ? 1500 : 250 + (Math.random() * 40), // Simulamos que el TDS falla
                     temp: 22.2 + (Math.random() * 2),
-                    od: isAnomalous ? 2.5 + Math.random() : 8.2 + (Math.random() * 1.2),
-                    orp: isAnomalous ? 150 + Math.random() * 100 : 520 + (Math.random() * 50),
+                    od: isWaterErr ? 2.5 + Math.random() : 8.2 + (Math.random() * 1.2),
+                    orp: isWaterErr ? 150 + Math.random() * 100 : 520 + (Math.random() * 50),
                     tag: tag
                 });
             }
@@ -486,9 +461,6 @@
 
         function initChart() {
             const labels = ['-4h', '-3h', '-2h', '-1h', 'Ahora', '+1h', '+2h', '+3h'];
-            const dataPast = [96, 98, 97, 98, 99, null, null, null];
-            const dataFuture = [null, null, null, null, 99, 98, 97, 98];
-
             chart = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -496,7 +468,7 @@
                     datasets: [
                         {
                             label: 'Histórico',
-                            data: dataPast,
+                            data: [96, 98, 97, 98, 99, null, null, null],
                             borderColor: '#3b82f6',
                             borderWidth: 4,
                             backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -507,7 +479,7 @@
                         },
                         {
                             label: 'IA',
-                            data: dataFuture,
+                            data: [null, null, null, null, 99, 98, 97, 98],
                             borderColor: '#a855f7',
                             borderDash: [5, 5],
                             borderWidth: 2,
@@ -524,16 +496,8 @@
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        y: {
-                            min: 0,
-                            max: 100,
-                            grid: { color: 'rgba(255,255,255,0.03)' },
-                            ticks: { font: { size: 10 }, color: '#555' }
-                        },
-                        x: {
-                            grid: { display: false },
-                            ticks: { font: { size: 10 }, color: '#555' }
-                        }
+                        y: { min: 0, max: 100, grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { font: { size: 10 }, color: '#555' } },
+                        x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#555' } }
                     }
                 }
             });
@@ -566,20 +530,26 @@
             };
         }
 
+        function closeAllPanels() {
+            document.querySelectorAll('.dropdown-panel').forEach(p => p.classList.remove('active'));
+        }
+
         function toggleModal() {
             document.getElementById('sensor-modal').classList.toggle('active');
         }
 
-        function showToast(msg) {
+        function showToast(title, msg, type="danger") {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            toast.className = `toast glass-panel p-4 border-l-4 border-red-500 shadow-2xl flex items-center gap-4`;
+            const color = type === 'danger' ? 'red' : 'yellow';
+            
+            toast.className = `toast glass-panel p-4 border-l-4 border-${color}-500 shadow-2xl flex items-center gap-4`;
             toast.innerHTML = `
-                <div class="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white">
-                    <i class="fas fa-exclamation-triangle"></i>
+                <div class="w-10 h-10 rounded-full bg-${color}-500 flex items-center justify-center text-white">
+                    <i class="fas ${type === 'danger' ? 'fa-exclamation-triangle' : 'fa-tools'}"></i>
                 </div>
                 <div>
-                    <h5 class="text-xs font-bold uppercase tracking-widest">Alerta de Calidad</h5>
+                    <h5 class="text-xs font-bold uppercase tracking-widest">${title}</h5>
                     <p class="text-[11px] text-gray-400 mt-1">${msg}</p>
                 </div>
             `;
@@ -589,13 +559,13 @@
                 toast.style.opacity = '0';
                 toast.style.transform = 'translateX(100%)';
                 setTimeout(() => toast.remove(), 300);
-            }, 6000);
+            }, 5000);
 
             const list = document.getElementById('notif-list');
             if (list.querySelector('p.italic')) list.innerHTML = '';
             const item = document.createElement('div');
-            item.className = "p-3 bg-white/5 rounded-xl text-[10px] border-l-4 border-red-500 mb-2";
-            item.innerHTML = `<span class="text-gray-500 font-bold block mb-1">${new Date().toLocaleTimeString()}</span> ${msg}`;
+            item.className = `p-3 bg-white/5 rounded-xl text-[10px] border-l-4 border-${color}-500 mb-2`;
+            item.innerHTML = `<span class="text-gray-500 font-bold block mb-1">${new Date().toLocaleTimeString()}</span> ${title}: ${msg}`;
             list.prepend(item);
             document.getElementById('notif-dot').classList.remove('hidden');
         }
@@ -616,12 +586,10 @@
             // Textos de tiempo
             document.getElementById('time-text').innerText = `Hoy, ${timeStr}`;
             document.getElementById('drop-sync-time').innerText = timeStr.substring(0, 5);
-            
-            // Modal de tiempo
             document.getElementById('modal-last-comm').innerText = `${timeStr} - ${fullDate}`;
             document.getElementById('modal-last-sync').innerText = `${timeStr} - ${fullDate}`;
 
-            // Reflejar datos del CSV
+            // Actualizar NÚMEROS en UI
             document.getElementById('val-ph').innerText = currentData.ph.toFixed(1);
             document.getElementById('val-turb').innerText = currentData.turb.toFixed(1);
             document.getElementById('val-tds').innerText = Math.round(currentData.tds);
@@ -629,123 +597,154 @@
             document.getElementById('val-od').innerText = currentData.od.toFixed(1);
             document.getElementById('val-orp').innerText = Math.round(currentData.orp);
 
+            // EVALUAR LÓGICA DE SENSORES Y AGUA
+            const tag = currentData.tag.toLowerCase();
+            const isSafe = tag.includes("segura");
+            const isHwError = tag.includes("hardware");
+            const isWaterAnomaly = !isSafe && !isHwError; // Anomalías como biológica, química
+
+            const bounds = {
+                ph: currentData.ph >= LIMITS.ph.min && currentData.ph <= LIMITS.ph.max,
+                turb: currentData.turb <= LIMITS.turb.max,
+                tds: currentData.tds <= LIMITS.tds.max,
+                temp: currentData.temp <= LIMITS.temp.max,
+                od: currentData.od >= LIMITS.od.min,
+                orp: currentData.orp >= LIMITS.orp.min
+            };
+
+            // Contar fallas de hardware en sensores específicos
+            if (isHwError) {
+                Object.keys(bounds).forEach(k => { if (!bounds[k]) hwErrorCounts[k]++; });
+            }
+
+            // ACTUALIZAR BANNER PRINCIPAL
             const hero = document.getElementById('hero-card');
             const hTitle = document.getElementById('hero-title');
             const hDesc = document.getElementById('hero-desc');
             const hIcon = document.getElementById('hero-icon');
 
-            const isAnomalous = !currentData.tag.toLowerCase().includes("segura");
-
-            if (!isAnomalous) {
+            if (isSafe) {
                 hero.className = "w-full p-6 md:p-10 rounded-[2rem] gradient-safe shadow-2xl transition-all duration-700 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden";
                 hTitle.innerText = "Agua Segura";
                 hDesc.innerText = "Lecturas normales. El agua almacenada en el tinaco es apta para uso doméstico.";
                 hIcon.className = "fas fa-circle-check text-[6rem] md:text-[8rem] opacity-30";
-            } else {
+            } else if (isHwError) {
+                hero.className = "w-full p-6 md:p-10 rounded-[2rem] gradient-hw shadow-2xl transition-all duration-700 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden";
+                hTitle.innerText = "Falla de Hardware";
+                hDesc.innerText = "El sistema ha detectado lecturas eléctricas inconsistentes en los sensores.";
+                hIcon.className = "fas fa-microchip text-[6rem] md:text-[8rem] opacity-30";
+                showToast("Hardware", "Posible daño en sondas del sistema.", "warning");
+            } else if (isWaterAnomaly) {
                 hero.className = "w-full p-6 md:p-10 rounded-[2rem] gradient-danger shadow-2xl transition-all duration-700 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden";
                 hTitle.innerText = "Alerta Detectada";
                 hDesc.innerText = `Motivo: ${currentData.tag}. Se han detectado parámetros fuera de norma en el tinaco.`;
                 hIcon.className = "fas fa-triangle-exclamation text-[6rem] md:text-[8rem] opacity-30";
-                showToast(`Alteración detectada: ${currentData.tag}`);
+                showToast("Contaminación", `Se detectó: ${currentData.tag}`, "danger");
             }
 
-            updateLabels(currentData);
-            updateModalSensors(currentData);
+            updateLabels(bounds, isHwError);
+            updateModalSensors(bounds, isHwError);
             
-            // --- NUEVA LÓGICA DE GRÁFICA ---
-            let ica = isAnomalous ? 45 + Math.random() * 10 : 95 + Math.random() * 4;
+            // --- ACTUALIZAR GRÁFICA (ICA) ---
+            let ica = isSafe ? (95 + Math.random() * 4) : (45 + Math.random() * 10);
             
-            // 1. Recorrer el historial (Línea Azul) a la izquierda (-4h a Ahora)
             for (let i = 0; i < 4; i++) {
                 chart.data.datasets[0].data[i] = chart.data.datasets[0].data[i + 1];
             }
-            
-            // 2. Anclar el valor actual exactamente en "Ahora" (índice 4)
             chart.data.datasets[0].data[4] = ica;
-            
-            // 3. Forzar a que el futuro del histórico esté vacío (nulo)
             chart.data.datasets[0].data[5] = null;
             chart.data.datasets[0].data[6] = null;
             chart.data.datasets[0].data[7] = null;
 
-            // 4. Anclar la línea de la IA (Morada) al mismo punto de inicio "Ahora"
             chart.data.datasets[1].data[4] = ica;
-            
-            // 5. Generar pronóstico para la IA (índices 5, 6 y 7)
-            if (isAnomalous) {
-                // Si hay anomalía, pronostica que seguirá bajando o inestable
+            if (!isSafe) {
                 chart.data.datasets[1].data[5] = ica - Math.random() * 5;
                 chart.data.datasets[1].data[6] = ica - Math.random() * 10;
                 chart.data.datasets[1].data[7] = ica - Math.random() * 15;
             } else {
-                // Si es seguro, pronostica que se mantendrá estable arriba de 95
                 chart.data.datasets[1].data[5] = 96 + Math.random() * 3;
                 chart.data.datasets[1].data[6] = 95 + Math.random() * 4;
                 chart.data.datasets[1].data[7] = 97 + Math.random() * 2;
             }
-
             chart.update('none');
 
-            // Ciclo de datos
             currentIndex = (currentIndex + 1) % dataPool.length;
         }
 
-        function updateLabels(data) {
-            const rules = {
-                ph: { isOk: data.ph >= LIMITS.ph.min && data.ph <= LIMITS.ph.max, ok: 'Correcto', okDesc: 'Nivel neutro y balanceado.', err: 'Alerta', errDesc: 'pH fuera de norma.' },
-                turb: { isOk: data.turb <= LIMITS.turb.max, ok: 'Limpia', okDesc: 'Agua transparente.', err: 'Alerta', errDesc: 'Exceso de sedimentos.' },
-                tds: { isOk: data.tds <= LIMITS.tds.max, ok: 'Normal', okDesc: 'Concentración de sales baja.', err: 'Alerta', errDesc: 'Altos sólidos disueltos.' },
-                temp: { isOk: data.temp <= LIMITS.temp.max, ok: 'Estable', okDesc: 'Dentro del rango óptimo.', err: 'Alerta', errDesc: 'Temperatura inusual.' },
-                od: { isOk: data.od >= LIMITS.od.min, ok: 'Óptimo', okDesc: 'Buena aireación detectada.', err: 'Alerta', errDesc: 'Bajo oxígeno detectado.' },
-                orp: { isOk: data.orp >= LIMITS.orp.min, ok: 'Segura', okDesc: 'Nivel de desinfección OK.', err: 'Alerta', errDesc: 'Riesgo biológico.' }
+        // --- ACTUALIZAR ETIQUETAS DE LA IZQUIERDA ---
+        function updateLabels(bounds, isHwError) {
+            const params = {
+                ph: { okDesc: 'Nivel neutro y balanceado.', warn: 'pH fuera de norma.' },
+                turb: { okDesc: 'Agua transparente.', warn: 'Exceso de sedimentos.' },
+                tds: { okDesc: 'Concentración de sales baja.', warn: 'Altos sólidos disueltos.' },
+                temp: { okDesc: 'Dentro del rango óptimo.', warn: 'Temperatura inusual.' },
+                od: { okDesc: 'Buena aireación detectada.', warn: 'Bajo oxígeno detectado.' },
+                orp: { okDesc: 'Nivel de desinfección OK.', warn: 'Riesgo biológico.' }
             };
 
-            Object.keys(rules).forEach(id => {
-                const rule = rules[id];
+            Object.keys(params).forEach(id => {
                 const badge = document.getElementById(`st-${id}`);
                 const text = document.getElementById(`desc-${id}`);
                 
-                if (rule.isOk) {
-                    badge.innerText = rule.ok;
+                if (bounds[id]) {
+                    badge.innerText = "Correcto";
                     badge.className = "status-pill bg-green-500/10 text-green-500";
-                    text.innerText = rule.okDesc;
-                    text.classList.remove('text-red-400');
-                    text.classList.add('text-gray-500');
+                    text.innerText = params[id].okDesc;
+                    text.className = "text-[10px] text-gray-500";
                 } else {
-                    badge.innerText = rule.err;
-                    badge.className = "status-pill bg-red-500/10 text-red-500";
-                    text.innerText = rule.errDesc;
-                    text.classList.remove('text-gray-500');
-                    text.classList.add('text-red-400');
+                    // Si falla el limite, evaluamos si es por hardware o por agua
+                    if (isHwError || hwErrorCounts[id] >= 5) {
+                        badge.innerText = "Falla HW";
+                        badge.className = "status-pill bg-yellow-500/10 text-yellow-500";
+                        text.innerText = "Posible problema en hardware";
+                        text.className = "text-[10px] text-yellow-500 font-bold";
+                    } else {
+                        // Es anomalia de agua (el hardware esta OK)
+                        badge.innerText = "Alerta";
+                        badge.className = "status-pill bg-red-500/10 text-red-500";
+                        text.innerText = params[id].warn;
+                        text.className = "text-[10px] text-red-400 font-bold";
+                    }
                 }
             });
         }
 
-        function updateModalSensors(data) {
+        // --- ACTUALIZAR MODAL Y CONTEO DE SENSORES ---
+        function updateModalSensors(bounds, isHwError) {
             const list = document.getElementById('modal-sensor-list');
             list.innerHTML = '';
             
-            const checks = [
-                { id: 'pH', icon: 'fa-vial text-blue-400', isOk: data.ph >= LIMITS.ph.min && data.ph <= LIMITS.ph.max },
-                { id: 'Turbidez', icon: 'fa-eye text-cyan-400', isOk: data.turb <= LIMITS.turb.max },
-                { id: 'Sólidos (TDS)', icon: 'fa-filter text-purple-400', isOk: data.tds <= LIMITS.tds.max },
-                { id: 'Temperatura', icon: 'fa-temperature-half text-orange-400', isOk: data.temp <= LIMITS.temp.max },
-                { id: 'Oxígeno (OD)', icon: 'fa-wind text-indigo-400', isOk: data.od >= LIMITS.od.min },
-                { id: 'Purificación (ORP)', icon: 'fa-shield-virus text-green-400', isOk: data.orp >= LIMITS.orp.min }
+            const sensors = [
+                { id: 'ph', name: 'Acidez (pH)', icon: 'fa-vial text-blue-400' },
+                { id: 'turb', name: 'Turbidez', icon: 'fa-eye text-cyan-400' },
+                { id: 'tds', name: 'Sólidos (TDS)', icon: 'fa-filter text-purple-400' },
+                { id: 'temp', name: 'Temperatura', icon: 'fa-temperature-half text-orange-400' },
+                { id: 'od', name: 'Oxígeno (OD)', icon: 'fa-wind text-indigo-400' },
+                { id: 'orp', name: 'Purificación (ORP)', icon: 'fa-shield-virus text-green-400' }
             ];
 
-            checks.forEach(check => {
+            let activeCount = 0;
+
+            sensors.forEach(s => {
+                // El sensor falla si el CSV dice que es falla de hardware Y está fuera de rango, 
+                // O si acumula más de 5 errores históticos.
+                const hwFailing = (isHwError && !bounds[s.id]) || hwErrorCounts[s.id] >= 5;
+                if (!hwFailing) activeCount++;
+
                 const item = document.createElement('div');
-                item.className = `flex justify-between items-center p-3 bg-black/20 rounded-lg border ${check.isOk ? 'border-white/5' : 'border-yellow-500/30'}`;
+                item.className = `flex justify-between items-center p-3 bg-black/20 rounded-lg border ${!hwFailing ? 'border-white/5' : 'border-yellow-500/30'}`;
                 item.innerHTML = `
-                    <span class="text-xs font-semibold flex items-center gap-2"><i class="fas ${check.icon} w-4"></i> Sensor ${check.id}</span>
-                    ${check.isOk 
+                    <span class="text-xs font-semibold flex items-center gap-2"><i class="fas ${s.icon} w-4"></i> Sensor ${s.name}</span>
+                    ${!hwFailing 
                         ? '<span class="text-[9px] font-bold text-green-500 bg-green-500/10 px-2 py-0.5 rounded">OK</span>' 
                         : '<span class="text-[9px] font-bold text-yellow-500 bg-yellow-500/10 px-2 py-0.5 rounded uppercase">Necesita Recalibrarse</span>'
                     }
                 `;
                 list.appendChild(item);
             });
+
+            // Actualizar contadores en la UI superior
+            document.getElementById('drop-sensor-count').innerText = activeCount;
         }
 
         window.onload = initApp;

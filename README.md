@@ -17,5 +17,4 @@ biológicas o de hardware.
 - Tailwind CSS: Diseño de interfaz moderno, minimalista y responsivo.
 - Fetch API: Para la lectura dinámica del dataset local.
 
-### Desarrollado por: Nicole Michelle Leyva Munguía
-Doctorado en Tecnologías de Información - Interfaces Gráficas de Usuario
+### Desarrollado por: Nicole Leyva - Doctorado en Tecnologías de Información UDG - Interfaces Gráficas de Usuario
