@@ -12,7 +12,7 @@ Totales), ORP (Potencial de Oxidación-Reducción) y Oxígeno Disuelto.
 - Predicciones con IA: Gráfica proyectada de calidad del agua para los próximos 3 días.
 - Alertas Pop-up: Notificaciones inmediatas ante detecciones de anomalías químicas,
 biológicas o de hardware.
-️## Tecnologías Utilizadas
+## Tecnologías utilizadas
 - HTML5/JavaScript (ES6+): Estructura y lógica de procesamiento de datos.
 - Tailwind CSS: Diseño de interfaz moderno, minimalista y responsivo.
 - Fetch API: Para la lectura dinámica del dataset local.
